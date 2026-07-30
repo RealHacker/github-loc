@@ -89,8 +89,6 @@ jobs:
 
       - name: Build
         run: npm run zip
-        env:
-          VITE_AUTH_TOKEN: ${{ secrets.VITE_AUTH_TOKEN }}
 
       - name: Upload to Artifacts
         uses: actions/upload-artifact@v4

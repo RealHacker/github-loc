@@ -10,15 +10,7 @@ export function getTarget() {
   let branch: string | undefined = path.slice(4).join("/")
 
   if (!branch) {
-    branch = document
-      .evaluate(
-        '//*[@id="ref-picker-repos-header-ref-selector"]/span/span[1]/div/div[2]/span',
-        document,
-        null,
-        XPathResult.FIRST_ORDERED_NODE_TYPE,
-        null,
-      )
-      .singleNodeValue?.textContent?.trim()
+    branch = document.getElementById("ref-picker-repos-header-ref-selector")?.textContent?.trim()
   }
 
   return [path[1], path[2], branch || "main"]

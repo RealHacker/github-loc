@@ -35,5 +35,5 @@ export default defineManifest({
     },
   ],
   permissions: ["storage"],
-  host_permissions: ["*://github.com/*"],
+  host_permissions: ["*://github.com/*", "https://ghloc.vercel.app/*"],
 })

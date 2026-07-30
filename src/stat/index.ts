@@ -1,21 +1,38 @@
-import { locateRoot, injectStat, updateStat, updateLink, updateFallbackLink } from "./injector"
+import {
+  locateRoot,
+  injectStat,
+  updateStat,
+  updateStatError,
+  updateLink,
+  updateFallbackLink,
+} from "./injector"
 import { fetchLoc, loadLoc } from "./loader"
 import { getTarget, getFilter, now } from "./util"
 import Stat from "./Stat"
 
 const FETCH_RATE_LIMIT = 10 * 60
 
+let mainToken = 0
+
 function main() {
-  locateRoot().then(([root, isPublic]) => {
+  const token = ++mainToken
+
+  locateRoot().then(([root, isPublic, existingStat]) => {
+    if (token !== mainToken) {
+      return
+    }
     const [org, repo, branch] = getTarget()
 
-    const statJSX = Stat({
-      org,
-      repo,
-      branch,
-    })
-
-    const stat = injectStat(root, statJSX)
+    const stat =
+      existingStat ??
+      injectStat(
+        root,
+        Stat({
+          org,
+          repo,
+          branch,
+        }),
+      )
 
     loadLoc(org, repo, branch).then((locData) => {
       if (isPublic) {
@@ -28,7 +45,7 @@ function main() {
         updateStat(stat, locData.loc)
 
         if (now() - locData.lastFetched < FETCH_RATE_LIMIT) {
-          if (!isPublic) {
+          if (!isPublic && Object.keys(locData.locByLangs).length > 0) {
             updateFallbackLink(stat, locData, org, repo)
           }
 
@@ -40,12 +57,14 @@ function main() {
         .then((locData) => {
           updateStat(stat, locData.loc)
 
-          if (!isPublic) {
+          if (!isPublic && Object.keys(locData.locByLangs).length > 0) {
             updateFallbackLink(stat, locData, org, repo)
           }
         })
         .catch((err) => {
-          console.log("Failed to fetch LOC:", err)
+          const message = err instanceof Error ? err.message : "Failed to fetch LOC"
+          console.error("Failed to fetch LOC:", err)
+          updateStatError(stat, message)
         })
     })
   })
